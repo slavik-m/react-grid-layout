@@ -10,8 +10,9 @@ var utils = module.exports = {
    * @param  {Array} layout Layout array.
    * @return {Number}       Bottom coordinate.
    */
-  bottom(layout) {
-    var max = 0, bottomY;
+  bottom: function bottom(layout) {
+    var max = 0,
+        bottomY;
     for (var i = 0, len = layout.length; i < len; i++) {
       bottomY = layout[i].y + layout[i].h;
       if (bottomY > max) max = bottomY;
@@ -24,7 +25,7 @@ var utils = module.exports = {
    * @param  {Object} obj Object to clone.
    * @return {Object}   Cloned object.
    */
-  clone(obj) {
+  clone: function clone(obj) {
     return assign({}, obj);
   },
 
@@ -35,7 +36,7 @@ var utils = module.exports = {
    * @param  {Object} l2 Layout object.
    * @return {Boolean}   True if colliding.
    */
-  collides(l1, l2) {
+  collides: function collides(l1, l2) {
     if (l1 === l2) return false; // same element
     if (l1.x + l1.w <= l2.x) return false; // l1 is left of l2
     if (l1.x >= l2.x + l2.w) return false; // l1 is right of l2
@@ -53,9 +54,10 @@ var utils = module.exports = {
    *   vertically.
    * @return {Array}       Compacted Layout.
    */
-  compact(layout, verticalCompact) {
+  compact: function compact(layout, verticalCompact) {
     // Statics go in the compareWith array right away so items flow around them.
-    var compareWith = utils.getStatics(layout), out = [];
+    var compareWith = utils.getStatics(layout),
+        out = [];
     // We go through the items by row and column.
     var sorted = utils.sortLayoutItemsByRowCol(layout);
 
@@ -63,7 +65,7 @@ var utils = module.exports = {
       var l = sorted[i];
 
       // Don't move static elements
-      if (!l.static) {
+      if (!l['static']) {
         l = utils.compactItem(compareWith, l, verticalCompact);
 
         // Add to comparison array. We only collide with items before this one.
@@ -81,7 +83,7 @@ var utils = module.exports = {
     return out;
   },
 
-  compactItem(compareWith, l, verticalCompact) {
+  compactItem: function compactItem(compareWith, l, verticalCompact) {
     if (verticalCompact) {
       // Move the element up as far as it can go without colliding.
       while (l.y > 0 && !utils.getFirstCollision(compareWith, l)) {
@@ -91,7 +93,7 @@ var utils = module.exports = {
 
     // Move it down, and keep moving it down if it's colliding.
     var collides;
-    while((collides = utils.getFirstCollision(compareWith, l))) {
+    while (collides = utils.getFirstCollision(compareWith, l)) {
       l.y = collides.y + collides.h;
     }
     return l;
@@ -104,7 +106,7 @@ var utils = module.exports = {
    * @param  {Number} bounds Number of columns.
    * @return {[type]}        [description]
    */
-  correctBounds(layout, bounds) {
+  correctBounds: function correctBounds(layout, bounds) {
     var collidesWith = utils.getStatics(layout);
     for (var i = 0, len = layout.length; i < len; i++) {
       var l = layout[i];
@@ -115,15 +117,13 @@ var utils = module.exports = {
         l.x = 0;
         l.w = bounds.cols;
       }
-      if (!l.static) collidesWith.push(l);
-      else {
+      if (!l['static']) collidesWith.push(l);else {
         // If this is static and collides with other statics, we must move it down.
         // We have to do something nicer than just letting them overlap.
-        while(utils.getFirstCollision(collidesWith, l)) {
+        while (utils.getFirstCollision(collidesWith, l)) {
           l.y++;
         }
       }
-
     }
     return layout;
   },
@@ -135,7 +135,7 @@ var utils = module.exports = {
    * @param  {Number} id     ID
    * @return {LayoutItem}    Item at ID.
    */
-  getLayoutItem(layout, id) {
+  getLayoutItem: function getLayoutItem(layout, id) {
     id = "" + id;
     for (var i = 0, len = layout.length; i < len; i++) {
       if ("" + layout[i].i === id) return layout[i];
@@ -150,13 +150,13 @@ var utils = module.exports = {
    * @param  {Object} layoutItem Layout item.
    * @return {Object|undefined}  A colliding layout item, or undefined.
    */
-  getFirstCollision(layout, layoutItem) {
+  getFirstCollision: function getFirstCollision(layout, layoutItem) {
     for (var i = 0, len = layout.length; i < len; i++) {
       if (utils.collides(layout[i], layoutItem)) return layout[i];
     }
   },
 
-  getAllCollisions(layout, layoutItem) {
+  getAllCollisions: function getAllCollisions(layout, layoutItem) {
     var out = [];
     for (var i = 0, len = layout.length; i < len; i++) {
       if (utils.collides(layout[i], layoutItem)) out.push(layout[i]);
@@ -169,10 +169,10 @@ var utils = module.exports = {
    * @param  {Array} layout Array of layout objects.
    * @return {Array}        Array of static layout items..
    */
-  getStatics(layout) {
+  getStatics: function getStatics(layout) {
     var out = [];
     for (var i = 0, len = layout.length; i < len; i++) {
-      if (layout[i].static) out.push(layout[i]);
+      if (layout[i]['static']) out.push(layout[i]);
     }
     return out;
   },
@@ -187,8 +187,8 @@ var utils = module.exports = {
    * @param  {Boolean}    [isUserAction] If true, designates that the item we're moving is
    *                                     being dragged/resized by th euser.
    */
-  moveElement(layout, l, x, y, isUserAction) {
-    if (l.static) return layout;
+  moveElement: function moveElement(layout, l, x, y, isUserAction) {
+    if (l['static']) return layout;
 
     // Short-circuit if nothing to do.
     if (l.y === y && l.x === x) return layout;
@@ -219,7 +219,7 @@ var utils = module.exports = {
       if (l.y > collision.y && l.y - collision.y > collision.h / 4) continue;
 
       // Don't move static items - we have to move *this* element away
-      if (collision.static) {
+      if (collision['static']) {
         layout = utils.moveElementAwayFromCollision(layout, collision, l, isUserAction);
       } else {
         layout = utils.moveElementAwayFromCollision(layout, l, collision, isUserAction);
@@ -239,7 +239,7 @@ var utils = module.exports = {
    * @param  {Boolean} [isUserAction]  If true, designates that the item we're moving is being dragged/resized
    *                                   by the user.
    */
-  moveElementAwayFromCollision(layout, collidesWith, itemToMove, isUserAction) {
+  moveElementAwayFromCollision: function moveElementAwayFromCollision(layout, collidesWith, itemToMove, isUserAction) {
 
     // If there is enough space above the collision to put this element, move it there.
     // We only do this on the main collision as this can get funky in cascades and cause
@@ -250,7 +250,7 @@ var utils = module.exports = {
         x: itemToMove.x,
         y: itemToMove.y,
         w: itemToMove.w,
-        h: itemToMove.h,
+        h: itemToMove.h
       };
       fakeItem.y = Math.max(collidesWith.y - itemToMove.h, 0);
       if (!utils.getFirstCollision(layout, fakeItem)) {
@@ -269,11 +269,11 @@ var utils = module.exports = {
    * @param  {Number} num Any number
    * @return {String}     That number as a percentage.
    */
-  perc(num) {
+  perc: function perc(num) {
     return num * 100 + '%';
   },
 
-  setTransform(style, coords) {
+  setTransform: function setTransform(style, coords) {
     // Replace unitless items with px
     var x = ('' + Math.round(coords[0])).replace(/(\d)$/, '$1px');
     var y = ('' + Math.round(coords[1])).replace(/(\d)$/, '$1px');
@@ -291,9 +291,9 @@ var utils = module.exports = {
    * @return {Array} Array of layout objects.
    * @return {Array}        Layout, sorted static items first.
    */
-  sortLayoutItemsByRowCol(layout) {
-    return [].concat(layout).sort(function(a, b) {
-      if (a.y > b.y || (a.y === b.y && a.x > b.x)) {
+  sortLayoutItemsByRowCol: function sortLayoutItemsByRowCol(layout) {
+    return [].concat(layout).sort(function (a, b) {
+      if (a.y > b.y || a.y === b.y && a.x > b.x) {
         return 1;
       }
       return -1;
@@ -310,7 +310,7 @@ var utils = module.exports = {
    *   vertically.
    * @return {Array}                Working layout.
    */
-  synchronizeLayoutWithChildren(initialLayout, children, cols, verticalCompact) {
+  synchronizeLayoutWithChildren: function synchronizeLayoutWithChildren(initialLayout, children, cols, verticalCompact) {
     // ensure 'children' is always an array
     if (!Array.isArray(children)) {
       children = [children];
@@ -336,18 +336,18 @@ var utils = module.exports = {
         // Validated; add it to the layout. Bottom 'y' possible is the bottom of the layout.
         // This allows you to do nice stuff like specify {y: Infinity}
         if (verticalCompact) {
-          layout.push(assign({}, g, {y: Math.min(utils.bottom(layout), g.y), i: child.key}));
+          layout.push(assign({}, g, { y: Math.min(utils.bottom(layout), g.y), i: child.key }));
         } else {
-          layout.push(assign({}, g, {y: g.y, i:child.key}));
+          layout.push(assign({}, g, { y: g.y, i: child.key }));
         }
       } else {
         // Nothing provided: ensure this is added to the bottom
-        layout.push({w: 1, h: 1, x: 0, y: utils.bottom(layout), i: child.key});
+        layout.push({ w: 1, h: 1, x: 0, y: utils.bottom(layout), i: child.key });
       }
     }
 
     // Correct the layout.
-    layout = utils.correctBounds(layout, {cols: cols});
+    layout = utils.correctBounds(layout, { cols: cols });
     layout = utils.compact(layout, verticalCompact);
 
     return layout;
@@ -360,7 +360,7 @@ var utils = module.exports = {
    * @param  {String} [contextName] Context name for errors.
    * @throw  {Error}                Validation error.
    */
-  validateLayout(layout, contextName) {
+  validateLayout: function validateLayout(layout, contextName) {
     contextName = contextName || "Layout";
     var subProps = ['x', 'y', 'w', 'h'];
     if (!Array.isArray(layout)) throw new Error(contextName + " must be an array!");
@@ -370,7 +370,7 @@ var utils = module.exports = {
           throw new Error('ReactGridLayout: ' + contextName + '[' + i + '].' + subProps[j] + ' must be a Number!');
         }
       }
-      if (layout[i].static !== undefined && typeof layout[i].static !== 'boolean') {
+      if (layout[i]['static'] !== undefined && typeof layout[i]['static'] !== 'boolean') {
         throw new Error('ReactGridLayout: ' + contextName + '[' + i + '].static must be a Boolean!');
       }
     }
